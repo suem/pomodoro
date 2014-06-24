@@ -1,0 +1,25 @@
+.main {
+}
+.timer {
+  font-family: "sans-serif";
+  font-size: 5em;
+  line-height:1.5em;
+}
+.icon {
+  width: 10em;
+  height: 10em;
+}
+.pomodoro {
+  height: 1em;
+  width: 1em;
+  margin-right: 2px;
+}
+
+.spin {
+    -webkit-animation:spin 4s linear infinite;
+    -moz-animation:spin 4s linear infinite;
+    animation:spin 4s linear infinite;
+}
+@-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
+@-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
+@keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
