@@ -15,13 +15,22 @@ function Service(onTimeUpdate, onUnitStarted, onUnitDone) {
   this.longPauseTime = 20*60;
   this.pomodoroTime = 20*60;
 
-  this.history = [];
+  var today = new Date();
+  var historyStr = localStorage[today.yyyymmdd()];
+  if(!historyStr) historyStr = "[]"
+  this.history = JSON.parse(historyStr)
+  if(!this.history) {
+    this.history = []; 
+    localStorage[new Date().yyyymmdd()] = JSON.stringify(this.history);
+  }
+
   this.currentUnit = {type:'pomodoro', duration: this.pomodoroTime} 
   this.time = this.currentUnit.duration;
   this.running = false;
 
   this.addNextUnit = function () {
     this.history.push(this.currentUnit)
+    localStorage[new Date().yyyymmdd()] = JSON.stringify(this.history);
     var lastIndex = this.history.length-1;
     var lastUnit = this.history[lastIndex];
     if(lastUnit.type == 'pomodoro') {
@@ -33,7 +42,6 @@ function Service(onTimeUpdate, onUnitStarted, onUnitDone) {
       this.currentUnit = {type: 'pomodoro', duration: this.pomodoroTime}
     }
   }
-
 
 
   this.startUnit = function () {
@@ -70,15 +78,11 @@ function Service(onTimeUpdate, onUnitStarted, onUnitDone) {
 var History = React.createClass({
   render: function() {
     var history = this.props.history;
-    return (<div>{history.map(this.renderUnit)} </div>)
+    return (<div id="pomodoros">{history.map(this.renderUnit)} </div>)
   },
   renderUnit: function (unit,index) {
-    if(unit.type == 'pomodoro') return <img key={index} className="pomodoro" src="img/tomato2.svg"/>
-    else {
-      var size = Math.floor(unit.duration / 200);
-      var style={marginLeft:size+'px', marginRight:size+'px'}
-      return <span style={style}></span>
-    }
+    if(unit.type == 'pomodoro') return <img className="pomodoro" src="img/tomato2.svg" />
+    else return null;
   }
 });
 
@@ -126,35 +130,34 @@ var App = React.createClass({
     var start = function () { service.startUnit(); return false;}
     var skip = function () { service.skipUnit(); return false;}
 
-    var timerButton;
-    if(service.running) {
-      timerButton = (<span>
-        {this.pad(this.minutes(service.time),2)}:{this.pad(this.seconds(service.time),2)}
-      </span>)
-    } else {
-      var text;
-      if(service.currentUnit.type == "pomodoro") text = "Start next pomodoro"
-      else text = "Have a break"
-      timerButton = <a href="#" className="btn btn-default  btn-lg" onClick={start}>{text}</a>
-    }
     var iconSrc = service.currentUnit.type == "pomodoro" ? "img/tomato1.svg" : "img/coffee.svg";
-    var iconClass = 'col-xs-2 icon text-center ' + (service.running ? 'spin' : 'nospin');
-    var skipStyle = (service.running ? {} : {visibility: "hidden"}); 
+
+    var button;
+    var spinClass = "";
+    if(service.running) {
+      spinClass = service.currentUnit.type == "pomodoro" ? "spin" : "nospin";
+      button = <a href="#" onClick={skip}>Skip</a>
+    } else {
+      var text = service.currentUnit.type == "pomodoro" ? "Work" : "Break";
+      button = <a href="#" className="btn btn-default  btn-lg" onClick={start}>{text}</a>
+    }
+
 
     return (
-      <div className="container main"> 
-
-        <div className="row">
-          <img className={iconClass} src={iconSrc}/>
-          <div className="col-xs-4 timer">{timerButton}</div>
-        </div>
-        <div className='row' style={skipStyle}>
-          <a href="#" className=" col-xs-offset-2 col-xs-1 btn btn-default btn-sm" onClick={skip}>skip</a>
-        </div>
-        <History history={service.history} />
+      <div id="main">
         <audio src="sounds/ticking.mp3" loop="true" ref="tickingAudio"></audio> 
         <audio src="sounds/bell.mp3" ref="bellAudio"></audio> 
-      </div>
+        <div id="icon">
+          <img className={spinClass} src={iconSrc}/>
+        </div>
+        <div id="timer">
+          {this.pad(this.minutes(service.time),2)}:{this.pad(this.seconds(service.time),2)}
+        </div>
+        <div id="control">
+          {button}
+        </div>
+        <History history={service.history} />
+      </div>  
     )
   }
 });

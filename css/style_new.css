@@ -1,0 +1,63 @@
+#main {
+  color: #000000;
+  padding: 10pt;
+  width:200pt;
+  min-height: 300pt;
+  background-color: #4FB99F;
+  font-family: 'Helvetica', 'Arial', sans-serif;
+}
+
+#icon {
+  text-align: center;
+}
+
+#icon img {
+  width: 90pt;
+  height: 90pt;
+}
+
+#timer {
+  font-size: 50pt;
+  text-align: center;
+}
+
+#control {
+  text-align: center;
+}
+
+#control a {
+  background-color: #F2B134;
+  padding: 5pt;
+  color: #000000;
+  font-size: 20pt;
+  display: block;
+  text-decoration: none;
+}
+
+#control a:hover {
+  background-color: #F28330;
+}
+
+#pomodoros {
+  margin-top: 10pt;
+}
+
+#pomodoros .pomodoro {
+  
+  margin-top: 1pt;
+  margin-right: 3pt;
+  margin-bottom: 1pt;
+  width: 20pt;
+  height: 20pt;
+}
+
+
+
+.spin {
+    -webkit-animation:spin 10s linear infinite;
+    -moz-animation:spin 10s linear infinite;
+    animation:spin 10s linear infinite;
+}
+@-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
+@-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
+@keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }

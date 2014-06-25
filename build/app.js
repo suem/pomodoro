@@ -15,13 +15,22 @@ function Service(onTimeUpdate, onUnitStarted, onUnitDone) {
   this.longPauseTime = 20*60;
   this.pomodoroTime = 20*60;
 
-  this.history = [];
+  var today = new Date();
+  var historyStr = localStorage[today.yyyymmdd()];
+  if(!historyStr) historyStr = "[]"
+  this.history = JSON.parse(historyStr)
+  if(!this.history) {
+    this.history = []; 
+    localStorage[new Date().yyyymmdd()] = JSON.stringify(this.history);
+  }
+
   this.currentUnit = {type:'pomodoro', duration: this.pomodoroTime} 
   this.time = this.currentUnit.duration;
   this.running = false;
 
   this.addNextUnit = function () {
     this.history.push(this.currentUnit)
+    localStorage[new Date().yyyymmdd()] = JSON.stringify(this.history);
     var lastIndex = this.history.length-1;
     var lastUnit = this.history[lastIndex];
     if(lastUnit.type == 'pomodoro') {
@@ -33,7 +42,6 @@ function Service(onTimeUpdate, onUnitStarted, onUnitDone) {
       this.currentUnit = {type: 'pomodoro', duration: this.pomodoroTime}
     }
   }
-
 
 
   this.startUnit = function () {
@@ -70,15 +78,11 @@ function Service(onTimeUpdate, onUnitStarted, onUnitDone) {
 var History = React.createClass({displayName: 'History',
   render: function() {
     var history = this.props.history;
-    return (React.DOM.div(null, history.map(this.renderUnit), " " ))
+    return (React.DOM.div( {id:"pomodoros"}, history.map(this.renderUnit), " " ))
   },
   renderUnit: function (unit,index) {
-    if(unit.type == 'pomodoro') return React.DOM.img( {key:index, className:"pomodoro", src:"img/tomato2.svg"})
-    else {
-      var size = Math.floor(unit.duration / 200);
-      var style={marginLeft:size+'px', marginRight:size+'px'}
-      return React.DOM.span( {style:style})
-    }
+    if(unit.type == 'pomodoro') return React.DOM.img( {className:"pomodoro", src:"img/tomato2.svg"} )
+    else return null;
   }
 });
 
@@ -126,35 +130,34 @@ var App = React.createClass({displayName: 'App',
     var start = function () { service.startUnit(); return false;}
     var skip = function () { service.skipUnit(); return false;}
 
-    var timerButton;
-    if(service.running) {
-      timerButton = (React.DOM.span(null, 
-        this.pad(this.minutes(service.time),2),":",this.pad(this.seconds(service.time),2)
-      ))
-    } else {
-      var text;
-      if(service.currentUnit.type == "pomodoro") text = "Start next pomodoro"
-      else text = "Have a break"
-      timerButton = React.DOM.a( {href:"#", className:"btn btn-default  btn-lg", onClick:start}, text)
-    }
     var iconSrc = service.currentUnit.type == "pomodoro" ? "img/tomato1.svg" : "img/coffee.svg";
-    var iconClass = 'col-xs-2 icon text-center ' + (service.running ? 'spin' : 'nospin');
-    var skipStyle = (service.running ? {} : {visibility: "hidden"}); 
+
+    var button;
+    var spinClass = "";
+    if(service.running) {
+      spinClass = service.currentUnit.type == "pomodoro" ? "spin" : "nospin";
+      button = React.DOM.a( {href:"#", onClick:skip}, "Skip")
+    } else {
+      var text = service.currentUnit.type == "pomodoro" ? "Work" : "Break";
+      button = React.DOM.a( {href:"#", className:"btn btn-default  btn-lg", onClick:start}, text)
+    }
+
 
     return (
-      React.DOM.div( {className:"container main"},  
-
-        React.DOM.div( {className:"row"}, 
-          React.DOM.img( {className:iconClass, src:iconSrc}),
-          React.DOM.div( {className:"col-xs-4 timer"}, timerButton)
-        ),
-        React.DOM.div( {className:"row", style:skipStyle}, 
-          React.DOM.a( {href:"#", className: " col-xs-offset-2 col-xs-1 btn btn-default btn-sm", onClick:skip}, "skip")
-        ),
-        History( {history:service.history} ),
+      React.DOM.div( {id:"main"}, 
         React.DOM.audio( {src:"sounds/ticking.mp3", loop:"true", ref:"tickingAudio"}), 
-        React.DOM.audio( {src:"sounds/bell.mp3", ref:"bellAudio"}) 
-      )
+        React.DOM.audio( {src:"sounds/bell.mp3", ref:"bellAudio"}), 
+        React.DOM.div( {id:"icon"}, 
+          React.DOM.img( {className:spinClass, src:iconSrc})
+        ),
+        React.DOM.div( {id:"timer"}, 
+          this.pad(this.minutes(service.time),2),":",this.pad(this.seconds(service.time),2)
+        ),
+        React.DOM.div( {id:"control"}, 
+          button
+        ),
+        History( {history:service.history} )
+      )  
     )
   }
 });
